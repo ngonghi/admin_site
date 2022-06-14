@@ -1,0 +1,49 @@
+version: "3"
+
+networks:
+  vian:
+    driver: bridge
+
+services:
+  app:
+    build: ./docker/go/
+    ports:
+      - "8085:8080"
+    depends_on:
+      - db
+    networks:
+      - vian
+    volumes:
+      - ./:/go/src/app
+    tty: true
+
+  db:
+    #image: mariadb
+    build: ./docker/db/
+    command:
+      - --sql-mode=NO_ENGINE_SUBSTITUTION
+    ports:
+      - "3306:3306"
+    networks:
+      - vian
+    volumes:
+      # データの永続化
+      - ./docker/db/mysql:/var/lib/mysql
+      # MySQLの設定ファイル
+      - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      # ダンプデータのマウント用
+      - ./docker/db/dump/:/var/dump/
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: vian
+      MYSQL_USER: vian
+      MYSQL_PASSWORD: 123456
+      # TimeZone設定
+      TZ: Asia/Tokyo
+
+  redis:
+    image: redis:latest
+    networks:
+      - vian
+    ports:
+      - "6379:6379"

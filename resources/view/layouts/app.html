@@ -1,0 +1,23 @@
+{{ define "app" }}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{ template "metadata.html"}}
+    <title>{{ block "title" . }} {{end}}</title>
+
+    {{ template "style.html"}}
+    {{ template "style" .}}
+</head>
+<body>
+{{ template "header.html" }}
+
+{{ template "content" . }}
+
+{{ template "modal" . }}
+{{ template "script.html" }}
+{{ template "script" . }}
+</body>
+</html>
+
+{{ end }}
