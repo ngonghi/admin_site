@@ -3,10 +3,12 @@ package core
 import (
 	"fmt"
 	"github.com/ngonghi/admin_site/internal/lang"
+	"github.com/ngonghi/admin_site/utils"
 	"html/template"
 	"io"
 	"log"
 	"path/filepath"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -41,12 +43,12 @@ func (t *templateRenderer) Load(layoutsDir, templatesDir string) {
 		log.Fatal(err)
 	}
 
-	includes, err := filepath.Glob(templatesDir)
+	includes, err := utils.GetAllFilePathsInDirectory(templatesDir)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	funcMap := template.FuncMap{
 		"Trans": lang.Get,
 	}
@@ -60,14 +62,14 @@ func (t *templateRenderer) Load(layoutsDir, templatesDir string) {
 	}
 
 	for _, file := range includes {
-		fileName := filepath.Base(file)
+		fileName := strings.Replace(file, templatesDir, "", -1)
 		files := append(layouts, file)
 		t.templates[fileName], err = mainTemplate.Clone()
 
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		
 		t.templates[fileName] = template.Must(t.templates[fileName].ParseFiles(files...))
 	}
 }

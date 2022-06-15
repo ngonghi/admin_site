@@ -22,6 +22,7 @@ type Configuration struct {
 	Lang             string `env:"LANG" envDefault:"en_US"`
 	LangDomain       string `env:"LANG_DOMAIN" envDefault:"default"`
 	JwtSecret        string `env:"JWT_SECRET,required"`
+	SessionSecret    string `env:"SESSION_SECRET,required"`
 }
 
 func NewConfig(files ...string) (*Configuration, error) {

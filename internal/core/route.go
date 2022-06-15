@@ -1,6 +1,8 @@
 package core
 
 import (
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/ngonghi/admin_site/internal/cache"
@@ -37,9 +39,17 @@ func NewRouter(server *Server) *echo.Echo {
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
 	}))
 
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup: "form:csrf_token",
+	}))
+	
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte(config.SessionSecret))))
+
 	// Add html templates with go template syntax
 	renderer := newTemplateRenderer(config.LayoutDir, config.TemplateDir)
 	e.Renderer = renderer
+
+	e.HTTPErrorHandler = HTTPErrorHandler
 
 	return e
 }

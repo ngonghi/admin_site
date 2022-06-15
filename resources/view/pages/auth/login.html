@@ -1,0 +1,22 @@
+{{define "title"}}Login{{end}}
+
+{{define "style"}}
+{{end}}
+
+{{define "content"}}
+<form action="/login" method="post">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"><br>
+
+    <input type="text" name="id" value=""><br>
+
+    <input type="password" name="password" value=""><br>
+
+    <button type="submit">Submit</button>
+</form>
+{{end}}
+
+{{define "modal"}}
+{{end}}
+
+{{define "script"}}
+{{end}}

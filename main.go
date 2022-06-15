@@ -4,6 +4,7 @@ import (
 	"github.com/ngonghi/admin_site/config"
 	"github.com/ngonghi/admin_site/internal/controller"
 	"github.com/ngonghi/admin_site/internal/core"
+	"github.com/ngonghi/admin_site/internal/middleware"
 	"github.com/ngonghi/admin_site/internal/models"
 	"log"
 )
@@ -19,10 +20,14 @@ func main() {
 	server.ServeStaticFiles()
 
 	indexCtrl := &controller.Index{}
+	authCtrl := &controller.Auth{}
 
 	// pages
-	server.Echo.GET("/", indexCtrl.GetIndex)
+	server.Echo.GET("", indexCtrl.GetIndex, middleware.CheckAuth())
 
+	server.Echo.GET("/login", authCtrl.GetLogin)
+	server.Echo.POST("/login", authCtrl.PostLogin)
+	
 	// migration for dev
 	admin := models.Admin{}
 	mr := server.GetModelRegistry()
