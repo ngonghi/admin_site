@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
+	"github.com/ngonghi/admin_site/internal/core"
 	"net/http"
 )
 
@@ -11,35 +11,62 @@ type (
 	Auth struct {
 	}
 
+	LoginForm struct {
+		Email    string `form:"email" transFieldName:"メール" validate:"required,email"`
+		Password string `form:"password" transFieldName:"パスワード" validate:"required"`
+	}
+
 	LoginViewModel struct {
-		CSRF string
+		CSRF              string
+		EmailErrorMess    string
+		PasswordErrorMess string
 	}
 )
 
 func (ctr Auth) GetLogin(c echo.Context) error {
-	c.Logger().Error(c.Get("csrf"))
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error")
+	}
 
 	vm := LoginViewModel{
 		CSRF: c.Get("csrf").(string),
 	}
 
+	if sess.Values["errors"] != nil {
+		errors := sess.Values["errors"].(map[string]string)
+		if errors["LoginForm.パスワード"] != "" {
+			vm.PasswordErrorMess = errors["LoginForm.パスワード"]
+		}
+		if errors["LoginForm.メール"] != "" {
+			vm.EmailErrorMess = errors["LoginForm.メール"]
+		}
+	}
+
+	sess.Values["errors"] = nil
+	sess.Save(c.Request(), c.Response())
+
 	return c.Render(http.StatusOK, "auth/login.html", vm)
 }
 
-func (ctr Auth) PostLogin(c echo.Context) error {
-	id := c.FormValue("id")
-	password := c.FormValue("password")
-
-	c.Logger().Error(id)
-	c.Logger().Error(password)
-
+func (ctr Auth) PostLogin(c echo.Context) (err error) {
 	sess, _ := session.Get("session", c)
 
-	sess.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7,
-		HttpOnly: true,
+	form := new(LoginForm)
+	if err = c.Bind(form); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	if err = c.Validate(form); err != nil {
+		sess.Values["errors"] = core.GetErrorMessages(err)
+		if e := sess.Save(c.Request(), c.Response()); e != nil {
+			c.Logger().Error(e)
+		}
+		return c.Redirect(http.StatusMovedPermanently, "/login")
+	}
+	
+	//id := c.FormValue("id")
+	//password := c.FormValue("password")
 
 	sess.Values["auth"] = "vian"
 	sess.Save(c.Request(), c.Response())

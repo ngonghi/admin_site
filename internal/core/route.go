@@ -9,13 +9,19 @@ import (
 	"github.com/ngonghi/admin_site/internal/context"
 	mid "github.com/ngonghi/admin_site/internal/middleware"
 	"github.com/ngonghi/admin_site/internal/repositories"
-	"gopkg.in/go-playground/validator.v9"
+	"log"
 )
 
 func NewRouter(server *Server) *echo.Echo {
 	config := server.config
 	e := echo.New()
-	e.Validator = &Validator{validator: validator.New()}
+
+	v, err := Init("ja")
+	if err != nil {
+		log.Fatalln("Init validator fail")
+	}
+
+	e.Validator = &Validator{validator: v}
 
 	cc := context.AppContext{
 		Cache:           &cache.RedisCache{Client: server.cache},
@@ -42,8 +48,10 @@ func NewRouter(server *Server) *echo.Echo {
 	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 		TokenLookup: "form:csrf_token",
 	}))
-	
-	e.Use(session.Middleware(sessions.NewCookieStore([]byte(config.SessionSecret))))
+
+	store := sessions.NewCookieStore([]byte(config.SessionSecret))
+	store.MaxAge(86400 * 7)
+	e.Use(session.Middleware(store))
 
 	// Add html templates with go template syntax
 	renderer := newTemplateRenderer(config.LayoutDir, config.TemplateDir)

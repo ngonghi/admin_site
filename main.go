@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"github.com/ngonghi/admin_site/config"
 	"github.com/ngonghi/admin_site/internal/controller"
 	"github.com/ngonghi/admin_site/internal/core"
@@ -14,6 +15,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("%+v\n", err)
 	}
+
+	gob.Register(map[string]string{})
+
 	// create server
 	server := core.NewServer(config)
 	// serve files for dev
@@ -27,7 +31,7 @@ func main() {
 
 	server.Echo.GET("/login", authCtrl.GetLogin)
 	server.Echo.POST("/login", authCtrl.PostLogin)
-	
+
 	// migration for dev
 	admin := models.Admin{}
 	mr := server.GetModelRegistry()
